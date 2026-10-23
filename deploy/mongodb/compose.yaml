@@ -1,0 +1,35 @@
+name: databack-mongodb
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: mongodb-databack
+    user: "1000:10"
+    init: true
+    restart: unless-stopped
+    entrypoint: ["/bin/bash", "/opt/databack/mongo-entrypoint.sh"]
+    environment:
+      HOME: /tmp/databack-mongosh
+      MONGO_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:?required}
+      MONGO_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:?required}
+      MONGODB_USERNAME: ${MONGODB_USERNAME:?required}
+      MONGODB_PASSWORD: ${MONGODB_PASSWORD:?required}
+    volumes:
+      - ${MONGODB_DATA_DIR:-./data}:/data/db
+      - .:/opt/databack:ro
+    networks:
+      private:
+        aliases: [databack-mongodb]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: ["CMD", "mongosh", "--nodb", "--quiet", "--file", "/opt/databack/mongo-health.js"]
+      interval: 15s
+      timeout: 10s
+      retries: 8
+      start_period: 120s
+
+networks:
+  private:
+    name: databack_private
+    internal: true

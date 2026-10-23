@@ -1,0 +1,26 @@
+name: databack
+services:
+  app:
+    image: ghcr.io/cimorn/databack:latest
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment:
+      DATABACK_HOST: 0.0.0.0
+      DATABACK_PORT: "8767"
+      DATABACK_PUBLIC_ORIGIN: ${DATABACK_PUBLIC_ORIGIN:-http://127.0.0.1:8767}
+      DATABACK_ALLOWED_HOSTS: ${DATABACK_ALLOWED_HOSTS:-127.0.0.1:8767,localhost:8767}
+      DATABACK_ADMIN_PASSWORD: ${DATABACK_ADMIN_PASSWORD:?required}
+      DATABACK_SESSION_SECRET: ${DATABACK_SESSION_SECRET:?required}
+      DATABACK_PRIVACY_PASSWORD: ${DATABACK_PRIVACY_PASSWORD:?required}
+    ports:
+      - "${DATABACK_BIND_IP:-127.0.0.1}:${DATABACK_BIND_PORT:-8767}:8767"
+    volumes:
+      - ledger:/data
+      - snapshots:/backups
+volumes:
+  ledger:
+  snapshots:
