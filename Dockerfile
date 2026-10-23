@@ -22,11 +22,11 @@ COPY web/requirements.txt ./
 RUN python -m pip install --no-cache-dir -r requirements.txt
 COPY --chown=1000:10 web/backend ./backend
 COPY --chown=1000:10 web/runtime ./runtime
-COPY --chown=1000:10 deploy/nas/app_health.py ./deploy/nas/app_health.py
+COPY --chown=1000:10 deploy/nas/app_health.py deploy/nas/app_entrypoint.py ./deploy/nas/
 COPY --chown=1000:10 --from=frontend /build/dist ./dist
 RUN mkdir -p /data /backups && chown 1000:10 /data /backups && chmod -R u=rwX,go=rX /app
 USER 1000:10
-RUN python -c "import runtime.entrypoint; from pathlib import Path; Path('/app/dist/index.html').read_bytes()"
+RUN python -c "import runtime.entrypoint, deploy.nas.app_entrypoint, deploy.nas.app_health; from pathlib import Path; Path('/app/dist/index.html').read_bytes()"
 EXPOSE 8767
 HEALTHCHECK --interval=30s --timeout=25s --start-period=30s CMD ["python", "-m", "runtime.health"]
 ENTRYPOINT ["python", "-m", "runtime.entrypoint"]
