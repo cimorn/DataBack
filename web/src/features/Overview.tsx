@@ -1,15 +1,25 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowUp, ChevronRight, File, FilePlus2, Folder, FolderPlus, GripVertical, ListPlus, Search } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { ArrowDown, ArrowUp, ArrowUpDown, ChevronRight, File, FilePlus2, Folder, FolderPlus, GripVertical, ListPlus, Search } from 'lucide-react';
 import { buildHierarchy } from '../hierarchy';
-import { formatTime, latestBackupForAsset } from '../selectors';
+import { formatTime } from '../selectors';
 import type { Asset, LedgerState } from '../types';
 import { EmptyState, PageHeading } from '../components/ui';
 import { AssetDetail } from './AssetDetail';
 import { ActionMenu } from '../components/ActionMenu';
-import { advanceDirectoryDrag, finishDirectoryDrag, moveDirectoryAsset, sortDirectoryAssets, startDirectoryDrag } from '../directoryOrder';
-import type { DirectoryDrag, DirectorySort } from '../directoryOrder';
+import { advanceDirectoryDrag, directoryColumnSort, finishDirectoryDrag, latestDirectoryBackup, moveDirectoryAsset, sortDirectoryAssets, startDirectoryDrag } from '../directoryOrder';
+import type { DirectoryDrag, DirectorySort, DirectorySortColumn } from '../directoryOrder';
 import { directoryNavigation, searchDirectoryAssets } from '../directoryTools';
 import type { DirectorySearchScope } from '../directoryTools';
+
+function SortHeading({column, label, sort, disabled, onSort, children}: {
+  column: DirectorySortColumn; label: string; sort: DirectorySort; disabled: boolean;
+  onSort: (sort: DirectorySort) => void; children?: ReactNode;
+}) {
+  const {direction, next} = directoryColumnSort(sort, column);
+  const Icon = direction === 'ascending' ? ArrowUp : direction === 'descending' ? ArrowDown : ArrowUpDown;
+  return <th aria-sort={direction}><div className="directory-sort-heading">{children}<button type="button" className="directory-sort-button" disabled={disabled} aria-label={`按${label}${direction === 'ascending' ? '降序' : '升序'}排序`} onClick={() => onSort(next)}>{label}<Icon size={14} aria-hidden="true" /></button></div></th>;
+}
 
 interface OverviewActions {
   state: LedgerState; folderId: string | null;
@@ -66,13 +76,11 @@ export function Overview(actions: OverviewActions) {
   const showBackupNotes = visibleAssets.some(asset => asset.backup_target === true && tree.isLeaf(asset.id));
   const rows = visibleAssets.map(asset => {
     const leaf = tree.isLeaf(asset.id);
-    const latest = leaf ? latestBackupForAsset(state, asset.id) : tree.leafDescendants(asset.id)
-      .filter(entry => entry.backup_target === true)
-      .flatMap(entry => { const record = latestBackupForAsset(state, entry.id); return record ? [record] : []; })
-      .sort((a, b) => Date.parse(b.backed_up_at) - Date.parse(a.backed_up_at))[0];
+    const latest = latestDirectoryBackup(state, asset.id, tree);
     return {asset, leaf, latest};
   });
   const canReorder = sort === 'manual' && !keyword.trim() && !pending && !bulkSelecting;
+  const changeSort = (mode: DirectorySort) => { cancelDrag(); setSort(mode); };
   const selectableIds=rows.filter(({asset,leaf})=>leaf?asset.backup_target===true:tree.leafDescendants(asset.id).some(child=>child.backup_target===true)).map(({asset})=>asset.id);
   const selectedVisible=selectableIds.filter(id=>selected.includes(id));
   const allSelected=selectableIds.length>0&&selectedVisible.length===selectableIds.length;
@@ -107,7 +115,7 @@ export function Overview(actions: OverviewActions) {
   };
   return <><PageHeading title="资料目录" action={folder?.kind !== 'file' ? <div className="heading-actions">{actions.onBulk&&!showingRecords?bulkSelecting?<><button className="button primary" disabled={!selectedVisible.length||pending} onClick={registerSelected}><ListPlus size={18}/>{selectedVisible.length?`登记所选（${selectedVisible.length}）`:'登记所选'}</button>{actions.onPaste?<button className="button secondary" onClick={()=>{cancelSelection();actions.onPaste!();}}>粘贴表格</button>:null}<button className="button secondary" aria-label="取消批量登记" onClick={cancelSelection}>取消</button></>:<button className="button secondary" onClick={()=>{cancelDrag();setSelected([]);setBulkSelecting(true);}}><ListPlus size={18}/>批量登记</button>:null}{!bulkSelecting?<><button className="button secondary" onClick={() => actions.onCreate('file', folderId)}><FilePlus2 size={19} />添加文件</button><button className="button primary" onClick={() => actions.onCreate('folder', folderId)}><FolderPlus size={20} />新建文件夹</button></>:null}</div> : undefined} />
     <div className="directory-toolbar"><nav className="breadcrumbs" aria-label="资料目录路径">{folder ? <button className="up-button" aria-label="返回上级目录" onClick={() => actions.onFolder(folder.parent_id ?? null)}><ArrowUp size={18} /></button> : null}<button onClick={() => actions.onFolder(null)}>全部资料</button>{[...ancestors, ...(folder ? [folder] : [])].map((entry, index, all) => <span key={entry.id}><ChevronRight size={16} />{index === all.length - 1 ? <strong aria-current="location">{entry.name}</strong> : <button onClick={() => actions.onFolder(entry.id)}>{entry.name}</button>}</span>)}</nav>
-    {showingRecords ? null : <div className="toolbar explorer-toolbar"><div className="directory-search"><select aria-label="搜索范围" value={searchScope} onChange={event => { setSearchScope(event.target.value as DirectorySearchScope); setSelected([]); }}><option value="current">当前目录</option><option value="all">全部资料</option></select><label className="search-field"><Search size={19} /><input aria-label={searchScope === 'all' ? '搜索全部资料' : '搜索当前目录'} placeholder={searchScope === 'all' ? '搜索全部资料' : '搜索当前目录'} value={keyword} onChange={event => { setKeyword(event.target.value); setSelected([]); }} /></label></div><select aria-label="目录排序" value={sort} onChange={e => { cancelDrag(); setSort(e.target.value as DirectorySort); }}><option value="manual">手动排序</option><option value="name-asc">名称升序</option><option value="name-desc">名称降序</option><option value="newest">最新备份优先</option><option value="oldest">最久未备份优先</option></select></div>}</div>
+    {showingRecords ? null : <div className="toolbar explorer-toolbar"><div className="directory-search"><select aria-label="搜索范围" value={searchScope} onChange={event => { setSearchScope(event.target.value as DirectorySearchScope); setSelected([]); }}><option value="current">当前目录</option><option value="all">全部资料</option></select><label className="search-field"><Search size={19} /><input aria-label={searchScope === 'all' ? '搜索全部资料' : '搜索当前目录'} placeholder={searchScope === 'all' ? '搜索全部资料' : '搜索当前目录'} value={keyword} onChange={event => { setKeyword(event.target.value); setSelected([]); }} /></label></div><select aria-label="目录排序" value={sort} onChange={e => changeSort(e.target.value as DirectorySort)}><option value="manual">手动排序</option><option value="name-asc">名称升序</option><option value="name-desc">名称降序</option><option value="newest">最新备份优先</option><option value="oldest">最久未备份优先</option><option value="notes-asc">备份说明升序</option><option value="notes-desc">备份说明降序</option></select></div>}</div>
     {orderError ? <div className="connection-error" role="alert"><span>{orderError}</span><button className="button secondary compact" disabled={pending} onClick={()=>void actions.onRefresh().then(()=>setOrderError(''))}>刷新目录</button></div> : null}
     {showingRecords ? <AssetDetail asset={folder} state={state} onEditRecords={() => actions.onEditRecords(folder.id)} onAddRecord={() => actions.onAddRecord(folder.id)} /> : <div className="surface explorer-surface" aria-busy={pending}>{!rows.length ? keyword ? <EmptyState title={searchingAll ? '没有匹配的资料' : '当前目录没有匹配的资料'} action={<button className="text-button" onClick={() => { setKeyword(''); setSelected([]); }}>清除搜索</button>} /> : <EmptyState title={folder ? '暂无下级资料' : '暂无资料'} action={folder ? <div className="empty-actions"><button className="button secondary" onClick={() => actions.onDetail(folder.id)}>备份信息</button><button className="button primary" disabled={actions.marking} onClick={() => actions.onMark(folder)}>设为备份对象</button></div> : undefined} /> : <table className={`explorer-table${showBackupNotes ? ' with-backup-notes' : ''}`}>
       <colgroup>
@@ -116,7 +124,12 @@ export function Overview(actions: OverviewActions) {
         {showBackupNotes ? <col className="directory-notes-column" /> : null}
         <col className="directory-actions-column" />
       </colgroup>
-      <thead><tr><th>{actions.onBulk&&bulkSelecting?<label className="directory-select-all"><input type="checkbox" aria-label={searchingAll ? '全选搜索结果备份资料' : '全选当前目录备份资料'} checked={allSelected} disabled={!selectableIds.length||pending} ref={node=>{if(node)node.indeterminate=selectedVisible.length>0&&!allSelected;}} onChange={()=>setSelected(current=>allSelected?current.filter(id=>!selectableIds.includes(id)):[...new Set([...current,...selectableIds])])}/><span>名称</span></label>:'名称'}</th><th>最新备份</th>{showBackupNotes ? <th>备份说明</th> : null}<th>操作</th></tr></thead><tbody>{rows.map(({asset, leaf, latest}) => {
+      <thead><tr>
+        <SortHeading column="name" label="名称" sort={sort} disabled={pending} onSort={changeSort}>{actions.onBulk&&bulkSelecting?<input type="checkbox" className="directory-selection" aria-label={searchingAll ? '全选搜索结果备份资料' : '全选当前目录备份资料'} checked={allSelected} disabled={!selectableIds.length||pending} ref={node=>{if(node)node.indeterminate=selectedVisible.length>0&&!allSelected;}} onChange={()=>setSelected(current=>allSelected?current.filter(id=>!selectableIds.includes(id)):[...new Set([...current,...selectableIds])])}/>:null}</SortHeading>
+        <SortHeading column="backup" label="最新备份" sort={sort} disabled={pending} onSort={changeSort} />
+        {showBackupNotes ? <SortHeading column="notes" label="备份说明" sort={sort} disabled={pending} onSort={changeSort} /> : null}
+        <th>操作</th>
+      </tr></thead><tbody>{rows.map(({asset, leaf, latest}) => {
       const Icon = asset.kind === 'folder' ? Folder : File;
       const marked = leaf && asset.backup_target === true;
       const index=siblings.findIndex(entry=>entry.id===asset.id);

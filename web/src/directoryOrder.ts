@@ -1,7 +1,31 @@
-import type { Asset, LedgerState } from './types.ts';
+import type { Asset, BackupRecord, LedgerState } from './types.ts';
 import { latestBackupForAsset } from './selectors.ts';
-export type DirectorySort = 'manual' | 'name-asc' | 'name-desc' | 'newest' | 'oldest';
+import { buildHierarchy } from './hierarchy.ts';
+import type { Hierarchy } from './hierarchy.ts';
+export type DirectorySort = 'manual' | 'name-asc' | 'name-desc' | 'newest' | 'oldest' | 'notes-asc' | 'notes-desc';
+export type DirectorySortColumn = 'name' | 'backup' | 'notes';
+const columnSorts = {
+  name: ['name-asc', 'name-desc'],
+  backup: ['oldest', 'newest'],
+  notes: ['notes-asc', 'notes-desc'],
+} as const;
+export function directoryColumnSort(mode: DirectorySort, column: DirectorySortColumn) {
+  const [ascending, descending] = columnSorts[column];
+  const direction = mode === ascending ? 'ascending' : mode === descending ? 'descending' : 'none';
+  return {direction, next: mode === ascending ? descending : ascending} as const;
+}
+export function latestDirectoryBackup(state: LedgerState, assetId: string, tree: Hierarchy = buildHierarchy(state.assets)): BackupRecord | undefined {
+  if (tree.isLeaf(assetId)) return latestBackupForAsset(state, assetId);
+  let latest: BackupRecord | undefined;
+  for (const child of tree.leafDescendants(assetId)) {
+    if (child.backup_target !== true) continue;
+    const record = latestBackupForAsset(state, child.id);
+    if (record && (!latest || Date.parse(record.backed_up_at) > Date.parse(latest.backed_up_at))) latest = record;
+  }
+  return latest;
+}
 const byName = (a: Asset, b: Asset) => a.name.localeCompare(b.name, 'zh-CN') || a.id.localeCompare(b.id);
+const compareNotes = new Intl.Collator('zh-CN', {numeric: true}).compare;
 function portableTextOrder(left:string,right:string):number {
   const a=Array.from(left),b=Array.from(right);
   for(let index=0;index<Math.min(a.length,b.length);index++){
@@ -12,9 +36,17 @@ function portableTextOrder(left:string,right:string):number {
 }
 export function sortDirectoryAssets(state: LedgerState, assets: Asset[], mode: DirectorySort): Asset[] {
   const times = new Map<string, number>();
-  if (mode === 'newest' || mode === 'oldest') for (const asset of assets) {
-    const latest = latestBackupForAsset(state, asset.id);
-    times.set(asset.id, latest ? Date.parse(latest.backed_up_at) : -Infinity);
+  const notes = new Map<string, string>();
+  if (mode === 'newest' || mode === 'oldest' || mode === 'notes-asc' || mode === 'notes-desc') {
+    const tree = buildHierarchy(state.assets);
+    for (const asset of assets) {
+      if (mode === 'notes-asc' || mode === 'notes-desc') {
+        notes.set(asset.id, asset.backup_target === true && tree.isLeaf(asset.id) ? latestBackupForAsset(state, asset.id)?.notes?.trim() ?? '' : '');
+      } else {
+        const latest = latestDirectoryBackup(state, asset.id, tree);
+        times.set(asset.id, latest ? Date.parse(latest.backed_up_at) : -Infinity);
+      }
+    }
   }
   return [...assets].sort((a, b) => {
     if (mode === 'manual') {
@@ -25,6 +57,11 @@ export function sortDirectoryAssets(state: LedgerState, assets: Asset[], mode: D
     }
     if (mode === 'name-desc') return byName(b,a);
     if (mode === 'name-asc') return byName(a,b);
+    if (mode === 'notes-asc' || mode === 'notes-desc') {
+      const left = notes.get(a.id)!, right = notes.get(b.id)!;
+      if (!left || !right) return Number(!left) - Number(!right) || byName(a,b);
+      return (mode === 'notes-asc' ? compareNotes(left,right) : compareNotes(right,left)) || byName(a,b);
+    }
     const difference = mode === 'newest' ? times.get(b.id)! - times.get(a.id)! : times.get(a.id)! - times.get(b.id)!;
     return difference || byName(a,b);
   });

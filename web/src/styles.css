@@ -88,6 +88,14 @@ td { padding: 16px; border-bottom: 1px solid var(--border); line-height: 1.5; ve
 tbody tr:last-child td { border-bottom: 0; }
 tbody tr:hover { background: #fcfdff; }
 .explorer-table { table-layout: fixed; }
+.directory-sort-heading { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.explorer-table th:first-child .directory-sort-heading { justify-content: flex-start; }
+.directory-sort-button { display: inline-flex; align-items: center; gap: 6px; padding: 4px 0; border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; white-space: nowrap; }
+.directory-sort-button svg { color: var(--muted); flex-shrink: 0; }
+.directory-sort-button:hover, .explorer-table th[aria-sort="ascending"] .directory-sort-button, .explorer-table th[aria-sort="descending"] .directory-sort-button { color: var(--accent); }
+.explorer-table th[aria-sort="ascending"] .directory-sort-button svg, .explorer-table th[aria-sort="descending"] .directory-sort-button svg { color: currentColor; }
+.directory-sort-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 3px; }
+.directory-sort-button:disabled { opacity: .5; cursor: wait; }
 .explorer-table th:first-child { border-radius: 12px 0 0 0; }
 .explorer-table th:last-child { border-radius: 0 12px 0 0; }
 .explorer-table td { padding: 16px; height: 66px; }
