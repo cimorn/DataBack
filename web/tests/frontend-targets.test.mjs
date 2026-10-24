@@ -43,7 +43,7 @@ const render = (component, extra = {}) => renderToStaticMarkup(createElement(com
 test('ordinary directory row has marker and child controls but no new-registration control or deadline', () => {
   const html = render(Overview);
   assert.doesNotMatch(html, />状态<|data-label="状态"|>文件夹</);
-  assert.equal((html.match(/<th>/g)??[]).length,3);
+  assert.equal((html.match(/<th(?:\s[^>]*)?>/g)??[]).length,3);
   assert.doesNotMatch(html, /个备份对象|个普通条目|备份对象最新记录/);
   assert.match(html, /设为备份对象/);
   assert.equal((html.match(/aria-haspopup="menu"/g) ?? []).length, 1);
@@ -51,6 +51,15 @@ test('ordinary directory row has marker and child controls but no new-registrati
   assert.match(html, /添加子文件夹/);
   assert.match(html, /添加子文件/);
   assert.doesNotMatch(html, />登记<|待首次备份/);
+});
+
+test('directory headers expose independent accessible sort controls and mobile note options', () => {
+  const marked={...ordinary,backup_target:true};
+  const html=render(Overview,{state:{...state,assets:[marked]}});
+  for(const name of ['名称','最新备份','备份说明']) assert.match(html,new RegExp('aria-label="按'+name+'升序排序"'));
+  assert.equal((html.match(/aria-sort="none"/g)??[]).length,3);
+  assert.match(html,/<option value="notes-asc">备份说明升序<\/option>/);
+  assert.match(html,/<option value="notes-desc">备份说明降序<\/option>/);
 });
 
 test('empty folder retains only top-toolbar creation and separate backup controls', () => {
@@ -298,10 +307,10 @@ test('target directories show latest record notes while ordinary-only directorie
  assert.match(html,/>备份说明</);
  assert.match(html,/最新备份说明/);
  assert.doesNotMatch(html,/这条不是最新记录/);
- assert.equal((html.match(/<th>/g)??[]).length,4);
+ assert.equal((html.match(/<th(?:\s[^>]*)?>/g)??[]).length,4);
  const plain=render(Overview);
  assert.doesNotMatch(plain,/>备份说明</);
- assert.equal((plain.match(/<th>/g)??[]).length,3);
+ assert.equal((plain.match(/<th(?:\s[^>]*)?>/g)??[]).length,3);
 });
 
 test('latest empty notes never fall back to an older description or an ordinary historical record', () => {
