@@ -8,6 +8,7 @@ import unittest
 import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
 from pathlib import Path
+from urllib.parse import parse_qs, urlsplit
 
 from backend.config import ServerConfig
 from backend.server import make_server
@@ -55,10 +56,20 @@ class AppIconTests(unittest.TestCase):
                                 for icon in manifest['icons']))
         self.assertTrue(any(icon.get('purpose') == 'maskable' for icon in manifest['icons']))
         for icon in manifest['icons']:
-            data = (PUBLIC / icon['src'].lstrip('/')).read_bytes()
+            data = (PUBLIC / urlsplit(icon['src']).path.lstrip('/')).read_bytes()
             self.assertEqual(data[:8], b'\x89PNG\r\n\x1a\n')
             width, height = struct.unpack('>II', data[16:24])
             self.assertEqual(f'{width}x{height}', icon['sizes'])
+
+    def test_all_icon_entrypoints_share_a_cache_revision(self):
+        head = HeadLinks()
+        head.feed((WEB / 'index.html').read_text(encoding='utf-8'))
+        links = [item['href'] for item in head.links if item.get('rel') in ('icon', 'apple-touch-icon', 'manifest')]
+        manifest = json.loads((PUBLIC / 'manifest.webmanifest').read_text(encoding='utf-8'))
+        links.extend(icon['src'] for icon in manifest['icons'])
+        revisions = [parse_qs(urlsplit(link).query).get('v', [''])[0] for link in links]
+        self.assertTrue(all(revisions), 'Every icon URL needs a revision so updated installs can fetch the new artwork')
+        self.assertEqual(len(set(revisions)), 1)
 
     def test_raster_icons_are_opaque_and_svg_covers_the_entire_background(self):
         pngs = list(PUBLIC.glob('*.png'))

@@ -157,6 +157,17 @@ test('app initial render contains a session check and never mounts private ledge
  assert.doesNotMatch(html,/主导航|资料目录|正在读取本机台账/);
 });
 
+test('navigation and session gate share the same icon artwork as the browser tab', () => {
+ const head=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ const href=head.match(/href="([^"]*favicon\.svg[^\"]*)"/)[1];
+ const shell=render(Shell,{page:'overview',onNavigate:noop,onTogglePrivacy:noop});
+ globalThis.window={location:{hash:''}};
+ const gate=render(App);
+ delete globalThis.window;
+ for(const html of [shell,gate]) assert.ok(html.includes(`src="${href}"`),'The visible brand must use the same revision as the favicon');
+ assert.match(shell,/<button[^>]+aria-label="DataBack"/);
+});
+
 
 test('protected SQLite shell remains minimal independently of its storage engine', () => {
  const html=render(Shell,{page:'overview',onNavigate:noop,storage:'sqlite',authRequired:true,onLogout:noop});

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import { Archive, LogIn, RefreshCw } from 'lucide-react';
+import { LogIn, RefreshCw } from 'lucide-react';
+import { BrandIcon } from './BrandIcon';
 import type { SessionSnapshot } from '../session';
 import { Field, FormError } from './ui';
 import { MAX_PASSWORD_CHARS } from '../inputLimits';
@@ -25,7 +26,7 @@ export function SessionGate({snapshot, onLogin, onRetry, onLogout}: {
     if (await onLogin(password)) setPassword('');
   }
   return <main className="session-page"><section className="session-card surface" aria-labelledby="session-title">
-    <div className="session-brand"><Archive size={35} strokeWidth={1.7} /><strong>DataBack</strong></div>
+    <div className="session-brand"><BrandIcon /><strong>DataBack</strong></div>
     <h1 id="session-title">{checking ? '正在确认会话…' : snapshot.status === 'logging-out' ? '正在退出登录…' : snapshot.status === 'error' ? '连接暂时不可用' : '登录'}</h1>
     <FormError message={snapshot.error} />
     {snapshot.logoutUnconfirmed ? <button className="button secondary" type="button" disabled={busy} onClick={() => void onLogout()}><RefreshCw size={18} />重试退出</button> : snapshot.status === 'error' ? <button className="button secondary" type="button" onClick={() => void onRetry()}><RefreshCw size={18} />重试连接</button> : !checking && snapshot.status !== 'logging-out' ? <form onSubmit={submit} className="session-form">

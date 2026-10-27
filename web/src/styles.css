@@ -34,7 +34,7 @@ small { font-size: 12px; }
 .sidebar { width: 208px; background: #fff; border-right: 1px solid var(--border); padding: 26px 12px; position: fixed; inset: 0 auto 0 0; z-index: 5; }
 .brand { display: flex; align-items: center; gap: 11px; padding: 0 11px; margin-bottom: 30px; }
 .brand strong { display: block; font-size: 22px; font-weight: 650; letter-spacing: -.4px; white-space: nowrap; }
-.brand > svg { color: var(--accent); width: 28px; height: 28px; flex-shrink: 0; }
+.brand-icon { display: block; width: 36px; height: 36px; flex-shrink: 0; object-fit: contain; }
 .sidebar nav { display: grid; gap: 5px; }
 .nav-item { width: 100%; background: transparent; border: 0; border-radius: 8px; padding: 13px 15px; display: flex; align-items: center; gap: 14px; font-size: 14px; font-weight: 500; text-align: left; min-height: 48px; }
 .nav-item > svg { width: 20px; height: 20px; color: #7183a1; }
@@ -213,6 +213,7 @@ tbody tr:hover { background: #fcfdff; }
 .session-page { min-height: 100dvh; display: grid; place-items: center; padding: 24px; }
 .session-card { width: min(100%, 400px); padding: 30px; }
 .session-brand { display: flex; align-items: center; gap: 12px; color: var(--accent); margin-bottom: 26px; }
+.session-brand .brand-icon { width: 44px; height: 44px; }
 .session-brand strong { color: #172b4d; font-size: 23px; }
 .session-card h1 { font-size: 22px; margin-bottom: 22px; }
 .session-card .error-message { margin-bottom: 18px; }
@@ -231,7 +232,7 @@ tbody tr:hover { background: #fcfdff; }
   .sidebar { position: static; width: 100%; border-right: 0; border-bottom: 1px solid var(--border); padding: 16px 12px 10px; }
   .brand { padding: 0 4px; margin-bottom: 14px; gap: 9px; }
   .brand strong { font-size: 20px; }
-  .brand > svg { width: 25px; height: 25px; }
+  .brand > .brand-icon { width: 30px; height: 30px; }
   .sidebar nav { display: flex; gap: 3px; overflow-x: auto; padding-bottom: 2px; }
   .nav-item { flex: 0 0 auto; width: auto; justify-content: center; min-height: 40px; padding: 9px 10px; font-size: 12px; gap: 5px; }
   .nav-item > svg { width: 16px; height: 16px; }
