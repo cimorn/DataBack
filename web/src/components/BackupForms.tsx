@@ -79,9 +79,9 @@ export function BackupDialog({state, initialAssetId, onClose, onSaved, onChooseT
       <datalist id={locationListId}>{state.locations.map(location => <option key={location.id} value={location.name}/>)}</datalist>
       <div className="table-scroll"><table className="record-entry-table"><thead><tr><th>备份时间</th><th>备份位置</th><th>备注</th><th><span className="sr-only">删除</span></th></tr></thead>
         <tbody>{rows.map((row, index) => <tr key={row.id}>
-          <td><input aria-label={`备份时间 ${index + 1}`} type="datetime-local" required value={row.time} onChange={event => update(row.id, {time: event.target.value})}/></td>
-          <td><input aria-label={`备份位置 ${index + 1}`} required maxLength={200} list={locationListId} value={row.location} onChange={event => update(row.id, {location: event.target.value})}/></td>
-          <td><input aria-label={`备注 ${index + 1}`} maxLength={MAX_NOTES_CHARS} title={`最多 ${MAX_NOTES_CHARS} 字`} value={row.notes} onChange={event => update(row.id, {notes: event.target.value})}/></td>
+          <td data-label="备份时间"><input aria-label={`备份时间 ${index + 1}`} type="datetime-local" required value={row.time} onChange={event => update(row.id, {time: event.target.value})}/></td>
+          <td data-label="备份位置"><input aria-label={`备份位置 ${index + 1}`} required maxLength={200} list={locationListId} value={row.location} onChange={event => update(row.id, {location: event.target.value})}/></td>
+          <td data-label="备注"><input aria-label={`备注 ${index + 1}`} maxLength={MAX_NOTES_CHARS} title={`最多 ${MAX_NOTES_CHARS} 字`} value={row.notes} onChange={event => update(row.id, {notes: event.target.value})}/></td>
           <td><button type="button" className="icon-button" aria-label={`删除第 ${index + 1} 行`} disabled={rows.length === 1} onClick={() => setRows(current => current.filter(item => item.id !== row.id))}><Trash2 size={16}/></button></td>
         </tr>)}</tbody></table></div>
       <button className="text-button" type="button" disabled={rows.length >= MAX_RECORDS_PER_BATCH} title={`单次最多 ${MAX_RECORDS_PER_BATCH} 条`} onClick={() => { if (rows.length >= MAX_RECORDS_PER_BATCH) return; const row = newRow(nextId.current++); setRows(current => [...current, row]); }}><Plus size={16}/>添加一行</button>
