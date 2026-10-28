@@ -42,5 +42,5 @@ export function DeleteDialog({ target, onClose, onRemove }: { target: DeleteTarg
     catch (reason) { setError(reason instanceof Error ? reason.message : '删除失败，请重试。'); }
     finally { setBusy(false); }
   }
-  return <Modal title="确认删除" onClose={onClose} busy={busy}><form className="form-body" onSubmit={submit}><p className="delete-description">将「{target.name}」移入回收站？30 天内可恢复。</p>{target.collection !== 'records' ? <p className="muted">有关联备份记录时，系统会保留条目并说明原因。</p> : null}<FormError message={error} /><div className="form-actions"><button type="button" className="button secondary" disabled={busy} onClick={onClose}>取消</button><button className="button danger" type="submit" disabled={busy}>{busy ? '正在删除…' : '确认删除'}</button></div></form></Modal>;
+  return <Modal title="确认删除" onClose={onClose} busy={busy}><form className="form-body" onSubmit={submit}><p className="delete-description">确认删除「{target.name}」？删除后可在提示中点击撤销。</p>{target.collection !== 'records' ? <p className="muted">有关联备份记录时，系统会保留条目并说明原因。</p> : null}<FormError message={error} /><div className="form-actions"><button type="button" className="button secondary" disabled={busy} onClick={onClose}>取消</button><button className="button danger" type="submit" disabled={busy}>{busy ? '正在删除…' : '确认删除'}</button></div></form></Modal>;
 }

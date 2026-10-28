@@ -52,7 +52,7 @@ export interface RecordFilters {
   dateFrom?: string;
   dateTo?: string;
 }
-export type Page = 'overview' | 'history' | 'data';
+export type Page = 'overview' | 'history';
 export interface SessionInfo {
   authenticated: boolean;
   auth_required: boolean;

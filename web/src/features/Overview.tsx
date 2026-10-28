@@ -44,7 +44,7 @@ export function Overview(actions: OverviewActions) {
   const {state, folderId} = actions;
   const tree = useMemo(() => buildHierarchy(state.assets), [state.assets]);
   const [keyword, setKeyword] = useState('');
-  const [searchScope, setSearchScope] = useState<DirectorySearchScope>('current');
+  const [searchScope, setSearchScope] = useState<DirectorySearchScope>('all');
   const [sort, setSort] = useState<DirectorySort>('manual');
   const [selected,setSelected]=useState<string[]>([]);
   const [bulkSelecting,setBulkSelecting]=useState(false);
@@ -65,7 +65,7 @@ export function Overview(actions: OverviewActions) {
     return () => { document.removeEventListener('keydown', escape); window.removeEventListener('blur', cancelDrag); cancelDrag(); };
   }, []);
   useEffect(() => { cancelDrag(); }, [sort, keyword, searchScope, pending]);
-  useEffect(() => { setKeyword(''); setSearchScope('current'); setSelected([]); setBulkSelecting(false); cancelDrag(); }, [folderId]);
+  useEffect(() => { setKeyword(''); setSearchScope('all'); setSelected([]); setBulkSelecting(false); cancelDrag(); }, [folderId]);
   const saving = useRef(false);
   const folder = folderId ? tree.byId.get(folderId) : undefined;
   const showingRecords = folder?.backup_target === true && tree.isLeaf(folder.id);
@@ -94,12 +94,12 @@ export function Overview(actions: OverviewActions) {
   const openEntry = (asset: Asset, marked: boolean) => {
     const target = directoryNavigation(asset, marked, searchingAll);
     if ('folderId' in target && target.detailId && actions.onLocateAsset) {
-      setKeyword(''); setSearchScope('current'); cancelSelection();
+      setKeyword(''); setSearchScope('all'); cancelSelection();
       actions.onLocateAsset(asset);
       return;
     }
     if ('folderId' in target) {
-      setKeyword(''); setSearchScope('current'); cancelSelection();
+      setKeyword(''); setSearchScope('all'); cancelSelection();
       actions.onFolder(target.folderId ?? null);
     }
     if (target.detailId) actions.onDetail(target.detailId);
@@ -114,8 +114,8 @@ export function Overview(actions: OverviewActions) {
     finally { saving.current = false; setPending(false); }
   };
   return <><PageHeading title="资料目录" action={folder?.kind !== 'file' ? <div className="heading-actions">{actions.onBulk&&!showingRecords?bulkSelecting?<><button className="button primary" disabled={!selectedVisible.length||pending} onClick={registerSelected}><ListPlus size={18}/>{selectedVisible.length?`登记所选（${selectedVisible.length}）`:'登记所选'}</button>{actions.onPaste?<button className="button secondary" onClick={()=>{cancelSelection();actions.onPaste!();}}>粘贴表格</button>:null}<button className="button secondary" aria-label="取消批量登记" onClick={cancelSelection}>取消</button></>:<button className="button secondary" onClick={()=>{cancelDrag();setSelected([]);setBulkSelecting(true);}}><ListPlus size={18}/>批量登记</button>:null}{!bulkSelecting?<><button className="button secondary" onClick={() => actions.onCreate('file', folderId)}><FilePlus2 size={19} />添加文件</button><button className="button primary" onClick={() => actions.onCreate('folder', folderId)}><FolderPlus size={20} />新建文件夹</button></>:null}</div> : undefined} />
-    <div className="directory-toolbar"><nav className="breadcrumbs" aria-label="资料目录路径">{folder ? <button className="up-button" aria-label="返回上级目录" onClick={() => actions.onFolder(folder.parent_id ?? null)}><ArrowUp size={18} /></button> : null}<button onClick={() => actions.onFolder(null)}>全部资料</button>{[...ancestors, ...(folder ? [folder] : [])].map((entry, index, all) => <span key={entry.id}><ChevronRight size={16} />{index === all.length - 1 ? <strong aria-current="location">{entry.name}</strong> : <button onClick={() => actions.onFolder(entry.id)}>{entry.name}</button>}</span>)}</nav>
-    {showingRecords ? null : <div className="toolbar explorer-toolbar"><div className="directory-search"><select aria-label="搜索范围" value={searchScope} onChange={event => { setSearchScope(event.target.value as DirectorySearchScope); setSelected([]); }}><option value="current">当前目录</option><option value="all">全部资料</option></select><label className="search-field"><Search size={19} /><input aria-label={searchScope === 'all' ? '搜索全部资料' : '搜索当前目录'} placeholder={searchScope === 'all' ? '搜索全部资料' : '搜索当前目录'} value={keyword} onChange={event => { setKeyword(event.target.value); setSelected([]); }} /></label></div><select aria-label="目录排序" value={sort} onChange={e => changeSort(e.target.value as DirectorySort)}><option value="manual">手动排序</option><option value="name-asc">名称升序</option><option value="name-desc">名称降序</option><option value="newest">最新备份优先</option><option value="oldest">最久未备份优先</option><option value="notes-asc">备份说明升序</option><option value="notes-desc">备份说明降序</option></select></div>}</div>
+    <div className="directory-toolbar"><nav className="breadcrumbs" aria-label="资料目录路径">{folder ? <button className="up-button" aria-label="返回上级目录" onClick={() => actions.onFolder(folder.parent_id ?? null)}><ArrowUp size={18} /></button> : null}<button onClick={() => actions.onFolder(null)}>全部</button>{[...ancestors, ...(folder ? [folder] : [])].map((entry, index, all) => <span key={entry.id}><ChevronRight size={16} />{index === all.length - 1 ? <strong aria-current="location">{entry.name}</strong> : <button onClick={() => actions.onFolder(entry.id)}>{entry.name}</button>}</span>)}</nav>
+    {showingRecords ? null : <div className="toolbar explorer-toolbar"><div className="directory-search"><select aria-label="搜索范围" value={searchScope} onChange={event => { setSearchScope(event.target.value as DirectorySearchScope); setSelected([]); }}><option value="current">当前目录</option><option value="all">全部</option></select><label className="search-field"><Search size={19} /><input aria-label={searchScope === 'all' ? '搜索全部资料' : '搜索当前目录'} placeholder={searchScope === 'all' ? '搜索全部资料' : '搜索当前目录'} value={keyword} onChange={event => { setKeyword(event.target.value); setSelected([]); }} /></label></div><select aria-label="目录排序" value={sort} onChange={e => changeSort(e.target.value as DirectorySort)}><option value="manual">目录排序</option><option value="name-asc">名称升序</option><option value="name-desc">名称降序</option><option value="newest">最新备份优先</option><option value="oldest">最久未备份优先</option><option value="notes-asc">备份说明升序</option><option value="notes-desc">备份说明降序</option></select></div>}</div>
     {orderError ? <div className="connection-error" role="alert"><span>{orderError}</span><button className="button secondary compact" disabled={pending} onClick={()=>void actions.onRefresh().then(()=>setOrderError(''))}>刷新目录</button></div> : null}
     {showingRecords ? <AssetDetail asset={folder} state={state} onEditRecords={() => actions.onEditRecords(folder.id)} onAddRecord={() => actions.onAddRecord(folder.id)} /> : <div className="surface explorer-surface" aria-busy={pending}>{!rows.length ? keyword ? <EmptyState title={searchingAll ? '没有匹配的资料' : '当前目录没有匹配的资料'} action={<button className="text-button" onClick={() => { setKeyword(''); setSelected([]); }}>清除搜索</button>} /> : <EmptyState title={folder ? '暂无下级资料' : '暂无资料'} action={folder ? <div className="empty-actions"><button className="button secondary" onClick={() => actions.onDetail(folder.id)}>备份信息</button><button className="button primary" disabled={actions.marking} onClick={() => actions.onMark(folder)}>设为备份对象</button></div> : undefined} /> : <table className={`explorer-table${showBackupNotes ? ' with-backup-notes' : ''}`}>
       <colgroup>

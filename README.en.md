@@ -2,7 +2,7 @@
 
 [简体中文](README.md) | **English**
 
-Track backup times, locations, and notes for files and folders. Supports batch entry, backup history, private folders, and data recovery.
+Track backup times, locations, and notes for files and folders. Supports batch entry, backup history, and private folders.
 
 ## Deploy with Docker
 
@@ -40,7 +40,7 @@ To connect an existing MongoDB instance, see [Database configuration](docs/docke
 - **Batch entry:** Enter batch mode and select items, or paste a table. Each batch supports up to 20 records.
 - **Find and edit records:** Open backup history → filter by item, location, or date → edit or delete records.
 - **Private folders:** Click DataBack in the upper-left corner and enter your privacy password. Click it again to hide private folders.
-- **Undo deletion:** Use Undo in the deletion notification, or restore items from the recycle bin in data management within 30 days.
+- **Undo deletion:** Click Undo in the deletion notification.
 
 ## Update
 
@@ -85,13 +85,11 @@ Set the `DATABACK_PRIVACY_PASSWORD` environment variable before using private fo
 
 ## Back up and restore data
 
-- **Export:** Unlock private folders → open data management → export JSON to save the complete ledger.
-- **Automatic backups:** Open automatic backups in data management. DataBack keeps one backup per day and retains the latest 30. You can download a backup or create one immediately.
-- **Restore:** Select a backup → review its contents → confirm. DataBack saves the current ledger before replacing it.
+- **Automatic backups:** The server saves one ledger snapshot per day and retains the latest 30. Docker stores these in the `databack_snapshots` volume by default.
 - **Full local backup:** Stop the app, then copy `data/`.
 - **Full Docker backup:** Stop the service and back up its data volumes and `.env`. See [Full backup](docs/docker.en.md#full-backup) for commands.
 
-Ledger JSON contains folders and backup records. Save actual files, recycle-bin contents, and deployment credentials separately.
+The ledger records folders and backup information. Save actual files and deployment credentials separately.
 
 ## Layout
 

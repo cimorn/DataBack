@@ -45,14 +45,6 @@ test('backup time sorting matches parent rows that display the latest marked des
 });
 test('move produces complete sibling order without mutating input and rejects foreign ids',()=>{assert.equal(typeof order.moveDirectoryAsset,'function');const ids=['a','b','c'];assert.deepEqual(order.moveDirectoryAsset(ids,'c','a'),['c','a','b']);assert.deepEqual(ids,['a','b','c']);assert.equal(order.moveDirectoryAsset(ids,'foreign','a'),null);assert.equal(order.moveDirectoryAsset(ids,'a','a'),null);});
 
-const {parseImportPreview}=await import('../src/importData.ts');
-test('import preview validates optional bounded manual order without requiring legacy field',()=>{
- const payload={format:'filebackup-ledger',schema_version:3,...state};
- assert.equal(parseImportPreview(JSON.stringify(payload)).assets.length,3);
- for(const value of [-1,true,1.5,'1',null,2147483648])assert.throws(()=>parseImportPreview(JSON.stringify({...payload,assets:[{...a,manual_order:value}]})),/手动排序/);
- assert.equal(parseImportPreview(JSON.stringify({...payload,assets:[{...a,manual_order:2147483647}]})).assets[0].manual_order,2147483647);
-});
-
 test('never-backed-up items precede even pre-epoch actual backups in oldest mode',()=>{
  const oldState={...state,records:[{id:'ancient',version_id:'v-old',backed_up_at:'1960-01-01T00:00:00Z'}]};
  assert.deepEqual(order.sortDirectoryAssets(oldState,[a,c],'oldest').map(x=>x.id),['c','a']);

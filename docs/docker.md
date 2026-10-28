@@ -46,7 +46,7 @@ networks:
 
 沿用已有部署时，保留原数据库目录、用户、密码、副本集和挂载配置，仅替换应用镜像。原 Compose 的 `deploy.nas.app_health` 健康检查入口仍可使用。
 
-台账可通过界面导出 JSON，在另一存储后端导入。迁移工具位于 `web/scripts/migrate_to_mongo.py`，运行 `--help` 查看参数。
+将已有 schema-3 台账 JSON 迁移到 MongoDB 时，使用 `web/scripts/migrate_to_mongo.py`，运行 `--help` 查看参数。
 
 ## 完整备份
 

@@ -30,18 +30,6 @@ test('bulk changes include only selected fields and allow deliberate clearing of
  assert.throws(()=>buildBulkRecordChanges({time:false,location:true,notes:false},{time:'',location:' ',notes:''}),/位置/);
  assert.throws(()=>buildBulkRecordChanges({time:false,location:false,notes:true},{time:'',location:'',notes:'x'.repeat(2001)}),/2000/);
 });
-test('refresh retry after committed recovery does not repeat mutation',async()=>{
- const {createRefreshSafeAction}=await import('../src/recoveryActions.ts');let writes=0;let reads=0;
- const action=createRefreshSafeAction(async()=>{writes++;return {restored:true};});
- await assert.rejects(action.run(async()=>{reads++;throw new Error('refresh unavailable');}),/refresh unavailable/);
- assert.equal(action.committed(),true);await action.run(async()=>{reads++;});assert.equal(writes,1);assert.equal(reads,2);
-});
-test('failed recovery mutation remains retryable and parallel clicks share the attempt',async()=>{
- const {createRefreshSafeAction}=await import('../src/recoveryActions.ts');let writes=0;let release;
- const action=createRefreshSafeAction(async()=>{writes++;if(writes===1)throw new Error('collision');return new Promise(resolve=>{release=resolve;});});
- await assert.rejects(action.run(async()=>{}),/collision/);assert.equal(action.committed(),false);
- const first=action.run(async()=>{});const second=action.run(async()=>{});await Promise.resolve();release({restored:true});await Promise.all([first,second]);assert.equal(writes,2);
-});
 const render=(component,props)=>renderToStaticMarkup(createElement(component,props));const noop=()=>{};
 test('reuse-last is explicit in new-record dialogs and absent when editing historical records',async()=>{
  const {BackupDialog}=await import('../src/components/BackupForms.tsx');const {BackupInfoDialog}=await import('../src/components/BackupInfoDialog.tsx');
@@ -56,8 +44,4 @@ test('history offers bulk edit without checkboxes until explicitly selected',asy
 test('bulk edit dialog requires explicit field selection and labels intentional note clearing',async()=>{
  const {RecordBulkEditDialog}=await import('../src/components/RecordBulkEditDialog.tsx');const html=render(RecordBulkEditDialog,{state,ids:['r1','r2'],onClose:noop,onSaved:noop});
  assert.match(html,/修改备份时间/);assert.match(html,/修改备份位置/);assert.match(html,/修改备注/);assert.match(html,/留空将清除所选记录的备注/);assert.match(html,/<button[^>]*type="submit"[^>]*disabled/);
-});
-test('collapsed recovery panel shows no privacy input or snapshot actions',async()=>{
- const {RecoveryPanels}=await import('../src/components/RecoveryPanels.tsx');const html=render(RecoveryPanels,{privacyOpen:false,onUnlockPrivacy:noop,onRefresh:noop});
- assert.match(html,/回收站/);assert.match(html,/自动备份/);assert.doesNotMatch(html,/输入隐私密码|立即备份|恢复台账/);
 });

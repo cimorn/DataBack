@@ -8,7 +8,7 @@ export function parseRoute(hash: string): Route {
     catch { return {...root}; }
   }
   const page = hash.slice(2);
-  return ['history', 'data'].includes(page) ? { page: page as Page, folderId: null } : {...root};
+  return page === 'history' ? { page, folderId: null } : {...root};
 }
 export function routeHash(route: Route): string {
   return route.page === 'overview' ? route.folderId ? `#/folder/${encodeURIComponent(route.folderId)}` : '#/' : `#/${route.page}`;
