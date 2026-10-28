@@ -1,0 +1,24 @@
+.app-shell { isolation: isolate; }
+.parallax-background {
+  position: fixed;
+  inset: 0 0 0 208px;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background: #f6f8fc;
+}
+.parallax-layer { position: absolute; inset: -140px -100px; }
+.parallax-layer-far {
+  background: radial-gradient(ellipse 65% 48% at 100% 6%, #d9e5ff80, transparent 75%);
+  transform: translate3d(0, calc(-1 * var(--parallax-far, 0px)), 0);
+}
+.parallax-layer-near {
+  background: radial-gradient(ellipse 55% 46% at 0% 84%, #dceaff80, transparent 74%);
+  transform: translate3d(0, calc(-1 * var(--parallax-near, 0px)), 0);
+}
+@media (max-width: 1000px) {
+  .parallax-background { left: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .parallax-layer { transform: none; }
+}
