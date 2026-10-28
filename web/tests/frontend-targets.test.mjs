@@ -138,7 +138,8 @@ test('legacy edit inputs present forward slashes without mutating their state', 
 test('databack shell retains navigation without storage footer or visible logout', () => {
  const nasHtml=render(Shell,{page:'overview',onNavigate:noop,storage:'mongodb',authRequired:true,onLogout:noop});
  assert.match(nasHtml,/>DataBack</);
- for (const label of ['资料目录','历史记录','数据管理']) assert.ok(nasHtml.includes(label));
+ for (const label of ['资料目录','历史记录']) assert.ok(nasHtml.includes(label));
+ assert.doesNotMatch(nasHtml,/数据管理|导出台账|导入台账|回收站|自动备份/);
  assert.doesNotMatch(nasHtml,/待备份|到期/);
  assert.doesNotMatch(nasHtml,/备份位置/);
  assert.doesNotMatch(nasHtml,/NAS 保存|退出登录/);

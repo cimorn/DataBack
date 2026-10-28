@@ -46,7 +46,7 @@ Merge these fields into the existing application configuration. For a separate c
 
 For existing deployments, keep the database directory, users, passwords, replica set, and volume mounts. Replace only the application image. The original `deploy.nas.app_health` Compose health-check entry point remains supported.
 
-To move between storage backends, export ledger JSON through the interface and import it into the destination. The migration CLI is at `web/scripts/migrate_to_mongo.py`; run it with `--help` for options.
+To migrate an existing schema-3 ledger JSON file to MongoDB, use `web/scripts/migrate_to_mongo.py`; run it with `--help` for options.
 
 ## Full backup
 

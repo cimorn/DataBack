@@ -2,7 +2,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as hierarchy from '../src/hierarchy.ts';
 import * as reminders from '../src/reminders.ts';
-import { parseImportPreview } from '../src/importData.ts';
 
 const asset = (id, name, parent_id = null, kind = 'folder', extra = {}) => ({ id, name, parent_id, kind, source_path: '', backup_target: true, backup_enabled: true, backup_interval_days: 30, target_location_ids: [], notes: '', created_at: '', ...extra });
 const assets = [asset('emotion', 'Emotion'), asset('letter', 'Letter', 'emotion'), asset('photos', 'Photos'), asset('me', 'Me', 'photos'), asset('year', '2025', 'me'), asset('file', 'note.txt', 'me', 'file')];
@@ -83,11 +82,6 @@ test('overall deadline ignores older target copies when another copy is newer', 
   assert.equal(result.latest.id, 'recent-old');
   assert.equal(result.nextDue, Date.parse('2026-10-31T00:00:00Z'));
   assert.equal(result.status, 'current');
-});
-
-test('schema 1, 2 and 3 import previews are accepted and schema 4 rejected', () => {
-  for (const schema_version of [1, 2, 3]) assert.equal(parseImportPreview(JSON.stringify({format: 'filebackup-ledger', schema_version, ...state})).schema_version, schema_version);
-  assert.throws(() => parseImportPreview(JSON.stringify({format: 'filebackup-ledger', schema_version: 4, ...state})), /支持的备份台账格式/);
 });
 
 test('the backup-target flag is the only reminder switch even for legacy reminder-off leaves', () => {

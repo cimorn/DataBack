@@ -18,7 +18,6 @@ import type { DeleteTarget, EntityForm } from './components/EntityForms';
 import { Overview } from './features/Overview';
 import { AssetDetail } from './features/AssetDetail';
 import { History } from './features/History';
-import { DataManagement } from './features/DataManagement';
 
 export default function App() {
   const session = useSession();
@@ -83,7 +82,7 @@ function LedgerApp({session, onLogout,privacyOpen,onTogglePrivacy,onSetPrivate}:
     finally { markPending.current = false; setMarking(false); }
   };
   const saved = async () => { await ledger.refresh({throwOnError: true}); setNotice('备份记录已保存。'); };
-  const deleted = async (trashId?: string) => { await ledger.refresh({throwOnError: true}); setNotice('已移入回收站。', trashId); };
+  const deleted = async (trashId?: string) => { await ledger.refresh({throwOnError: true}); setNotice('已删除。', trashId); };
   const state = ledger.state;
   const detail = state?.assets.find(asset => asset.id === detailId);
   const directRecords = state && route.folderId && state.assets.some(asset => asset.id === route.folderId && asset.backup_target === true) && buildHierarchy(state.assets).isLeaf(route.folderId);
@@ -96,7 +95,6 @@ function LedgerApp({session, onLogout,privacyOpen,onTogglePrivacy,onSetPrivate}:
     {!state ? <div className="initial-state"><h1>DataBack</h1><p>{ledger.loading ? `正在读取${nas ? '' : '本机'}台账…` : '恢复连接后即可继续查看和登记资料。'}</p></div> : <>
       {route.page === 'overview' ? <Overview key={`directory:${route.folderId ?? 'root'}`} state={state} folderId={route.folderId} onFolder={openFolder} onCreate={createAsset} onAssetForm={entry => setEntity({kind: 'assets', entry})} onMark={markAsset} marking={marking} onAssetDelete={asset => setDeletion({collection: 'assets', id: asset.id, name: asset.name})} onRegister={assetId => setBackup({assetId})} onDetail={setDetailId} onLocateAsset={locateAsset} onEditRecords={assetId => setRecordEditor({assetId, mode: 'edit'})} onAddRecord={assetId => setRecordEditor({assetId, mode: 'new'})} onReorder={ledger.reorder} onRefresh={ledger.refresh} onBulk={assetIds=>setBulk({assetIds,mode:'selection'})} onPaste={()=>setBulk({mode:'paste'})} onPrivacy={onSetPrivate}/> : null}
       {route.page === 'history' ? <History key={history.key} state={state} initialFilters={history.filters} onRegister={() => setBackup({})} onBulk={()=>setBulk({mode:'selection'})} onBulkEdit={setBulkRecordIds} onEdit={setRecord} onDelete={entry => setDeletion({collection: 'records', id: entry.id, name: '备份记录'})} /> : null}
-      {route.page === 'data' ? <DataManagement state={state} onRefresh={()=>ledger.refresh({throwOnError:true})} privacyOpen={privacyOpen} onUnlockPrivacy={onTogglePrivacy} /> : null}
       {detail && route.page === 'overview' && !directRecords ? <AssetDetail key={`detail:${detail.id}`} asset={detail} state={state} onClose={() => setDetailId('')} onEditRecords={() => setRecordEditor({assetId: detail.id, mode: 'edit'})} onAddRecord={buildHierarchy(state.assets).isLeaf(detail.id) ? () => setRecordEditor({assetId: detail.id, mode: 'new'}) : undefined} /> : null}
       {recordInfo && recordEditor ? <BackupInfoDialog key={`record-editor:${recordInfo.id}:${recordEditor.mode}`} state={state} asset={recordInfo} initialMode={recordEditor.mode} onClose={() => setRecordEditor(null)} onSaved={saved} onDeleted={deleted} /> : null}
       {backup ? <BackupDialog state={state} initialAssetId={backup.assetId} onClose={() => setBackup(null)} onSaved={saved} onChooseTargets={() => { setBackup(null); openFolder(null); }} /> : null}
@@ -109,6 +107,6 @@ function LedgerApp({session, onLogout,privacyOpen,onTogglePrivacy,onSetPrivate}:
         setNotice(nas ? '已保存。' : '已保存到本机台账。');
       }} /> : null}
     </>}
-    {deletion ? <DeleteDialog target={deletion} onClose={() => setDeletion(null)} onRemove={async (collection, id) => { const receipt = await ledger.remove(collection, id); setNotice('已移入回收站。', receipt.trash_id); }} /> : null}
+    {deletion ? <DeleteDialog target={deletion} onClose={() => setDeletion(null)} onRemove={async (collection, id) => { const receipt = await ledger.remove(collection, id); setNotice('已删除。', receipt.trash_id); }} /> : null}
   </Shell>;
 }

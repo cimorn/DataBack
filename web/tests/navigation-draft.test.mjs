@@ -14,6 +14,13 @@ test('folder hashes preserve exact IDs, pages and invalid or deleted folders fal
   assert.deepEqual(navigation.parseRoute('#/due'), {page: 'overview', folderId: null});
 });
 
+test('removed data-management links resolve to the directory without reviving a retired page', () => {
+  const route = navigation.parseRoute('#/data');
+  assert.deepEqual(route, {page: 'overview', folderId: null});
+  assert.equal(navigation.routeHash(route), '#/');
+  assert.deepEqual(navigation.parseRoute('#/history'), {page: 'history', folderId: null});
+});
+
 test('marked terminal file routes resolve to their own record page', () => {
  const route={page:'overview',folderId:'file'};
  assert.deepEqual(navigation.resolveRoute(route,[{id:'file',kind:'file',backup_target:true}]),route);

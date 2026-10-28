@@ -1,7 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { latestVersion, latestRecordsByLocation, latestRecordsForAsset, latestBackupForAsset, filterRecords, toDatetimeLocal, toBackupTimestamp } from '../src/selectors.ts';
-import { createLatestImportReader, parseImportPreview } from '../src/importData.ts';
 import { buildRegisteredTree } from '../src/pathTree.ts';
 
 process.env.TZ = 'America/Los_Angeles';
@@ -74,12 +73,6 @@ test('editing a record without changing its minute retains original seconds', ()
   assert.equal(toBackupTimestamp('2026-01-02T00:15', '2026-01-02T08:15:49.500Z'), '2026-01-02T08:15:49.500Z');
   assert.equal(toBackupTimestamp('2026-01-02T00:16', '2026-01-02T08:15:49.500Z'), '2026-01-02T08:16:00.000Z');
 });
-test('invalid import shape is rejected before confirmation without leaking a TypeError', () => {
-  assert.throws(() => parseImportPreview('null'), /支持的备份台账格式/);
-  assert.throws(() => parseImportPreview('{'), /JSON 内容无法解析/);
-  assert.throws(() => parseImportPreview(JSON.stringify({ format: 'filebackup-ledger', schema_version: 1, ...state, records: null })), /支持的备份台账格式/);
-  assert.equal(parseImportPreview(JSON.stringify({ format: 'filebackup-ledger', schema_version: 1, ...state })).records.length, 4);
-});
 test('directory view retains every accepted asset including empty and slash-only source paths', () => {
   const summaries = ['', '   ', '/', '\\\\', 'D:/Photos', 'D:/Photos/Me'].map((source_path, index) => ({
     asset: { id: String(index), name: `资料${index}`, kind: 'folder', source_path, notes: '', created_at: '' }, locations: new Map(),
@@ -94,24 +87,6 @@ test('directory view retains every accepted asset including empty and slash-only
   assert.equal(drive.children.get('photos').assets[0].asset.id, '4');
   assert.equal(drive.children.get('photos').children.get('me').assets[0].asset.id, '5');
 });
-test('a slow previous file selection cannot replace the latest import preview', async () => {
-  const read = createLatestImportReader();
-  let resolveOld;
-  const old = read({ size: 10, text: () => new Promise(resolve => { resolveOld = resolve; }) });
-  const latest = await read({ size: 10, text: async () => JSON.stringify({ format: 'filebackup-ledger', schema_version: 1, ...state, records: [] }) });
-  resolveOld(JSON.stringify({ format: 'filebackup-ledger', schema_version: 1, ...state }));
-  assert.equal(latest.records.length, 0);
-  assert.equal(await old, undefined);
-});
-test('a stale parse error cannot replace a newer valid file selection', async () => {
-  const read = createLatestImportReader();
-  let resolveOld;
-  const old = read({ size: 10, text: () => new Promise(resolve => { resolveOld = resolve; }) });
-  await read({ size: 10, text: async () => JSON.stringify({ format: 'filebackup-ledger', schema_version: 1, ...state }) });
-  resolveOld('null');
-  assert.equal(await old, undefined);
-});
-
 test('retired paths remain stored without participating in visible history searches', () => {
  const legacy={...state,assets:[{...state.assets[0],source_path:String.raw`\\fixture\personal_folder`}],records:[{...state.records[0],stored_path:String.raw`D:\Photos`}]};
  assert.equal(filterRecords(legacy,{keyword:'D:/Photos'}).length,0);
