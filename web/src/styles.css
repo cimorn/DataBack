@@ -112,8 +112,8 @@ tbody tr:hover { background: var(--page); }
 .explorer-identity { display: flex; align-items: center; gap: 14px; min-width: 0; }
 .explorer-identity > svg { width: 18px; height: 18px; flex-shrink: 0; stroke-width: 1.5; }
 .explorer-identity > div { flex: 1; min-width: 0; }
-.folder-icon { color: var(--secondary); }
-.file-icon { color: var(--muted); }
+.folder-icon { color: #74aaff; fill: #8bbbff; }
+.file-icon { color: #869bbb; }
 .asset-name { display: block; border: 0; background: transparent; text-align: left; color: var(--text); font-weight: 500; font-size: 13px; padding: 0; overflow-wrap: anywhere; }
 .asset-name:hover { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
 .explorer-identity small { display: block; color: var(--muted); font-size: 12px; margin-top: 4px; }
