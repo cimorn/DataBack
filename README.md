@@ -53,29 +53,9 @@ docker compose up -d app
 
 ## 开发与发布
 
-需要 Python 3.10+、Node.js 22.15+、pnpm 10.28.2。
+环境安装、本地运行、修改代码和测试命令见 [网页开发文档](DEVELOPMENT.md)。
 
-```sh
-cd web
-python -m pip install -r requirements.txt
-pnpm install --frozen-lockfile
-pnpm build
-python app.py
-```
-
-打开 <http://127.0.0.1:8767>。开发界面时另开终端，在 `web/` 运行 `pnpm dev`，API 由 Python 服务提供。
-
-使用本机隐私目录前，设置 `DATABACK_PRIVACY_PASSWORD` 环境变量。
-
-```sh
-pnpm test
-pnpm build
-python -m unittest discover -s tests -p 'test_*.py'
-```
-
-MongoDB 集成测试使用独立副本集，通过 `DATABACK_TEST_MONGO_URI` 指定测试连接。CI 自动创建测试数据库。
-
-修改 `web/src/` 更新界面，修改 `web/backend/` 更新接口。提交并推送到 `main` 后，GitHub Actions 自动测试并发布 `ghcr.io/cimorn/databack:latest`。也会发布 `sha-完整提交编号` 标签，可用于固定镜像或回退。
+推送分支并创建 PR → 检查通过后合并到 `main` → 等待 GitHub Actions 发布镜像 → Docker 主机拉取更新。镜像同时提供 `latest` 和 `sha-完整提交编号` 标签。
 
 本机构建镜像：`docker build -t databack .`（在项目根目录执行）。
 
@@ -91,6 +71,7 @@ MongoDB 集成测试使用独立副本集，通过 `DATABACK_TEST_MONGO_URI` 指
 
 ```text
 web/               网页界面、API、测试
+DEVELOPMENT.md     网页开发说明
 deploy/mongodb/    可选 MongoDB 副本集配置
 Dockerfile         镜像构建
 compose.yaml       Docker 部署
