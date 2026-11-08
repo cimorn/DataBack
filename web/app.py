@@ -1,4 +1,4 @@
-"""Absolute-path entry point used by the Windows launcher."""
+"""Start the local DataBack web server."""
 
 from backend.server import main
 

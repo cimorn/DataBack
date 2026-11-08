@@ -53,35 +53,11 @@ Updates preserve data volumes and `.env`. Check status with `docker compose ps` 
 
 ## Develop and publish
 
-Requires Python 3.10+, Node.js 22.15+, and pnpm 10.28.2.
+See [Web development](DEVELOPMENT.en.md) for setup, local previews, code changes, and test commands.
 
-```sh
-cd web
-python -m pip install -r requirements.txt
-pnpm install --frozen-lockfile
-pnpm build
-python app.py
-```
-
-Open <http://127.0.0.1:8767>. For frontend development, run `pnpm dev` from `web/` in another terminal. Keep the Python server running for API requests.
-
-```sh
-pnpm test
-pnpm build
-python -m unittest discover -s tests -p 'test_*.py'
-```
-
-MongoDB integration tests require a separate replica set. Set `DATABACK_TEST_MONGO_URI` to its connection string. CI creates an isolated test database automatically.
-
-Edit `web/src/` for the interface and `web/backend/` for the API. Push to `main` to run tests and publish `ghcr.io/cimorn/databack:latest` through GitHub Actions. Each build also publishes a `sha-<full-commit-hash>` tag for pinning or rolling back an image.
+Push a branch and open a PR → merge into `main` after checks pass → wait for GitHub Actions to publish the image → pull the update on the Docker host. Images use `latest` and `sha-<full-commit-hash>` tags.
 
 To build locally, run `docker build -t databack .` from the repository root.
-
-## Desktop launcher
-
-On Windows, build `web/`, then double-click `desktop/启动.cmd` to start and `desktop/关闭.cmd` to stop. The launcher opens the local web app in your browser. Data is stored in `data/` at the repository root.
-
-Set the `DATABACK_PRIVACY_PASSWORD` environment variable before using private folders locally.
 
 ## Back up and restore data
 
@@ -95,7 +71,7 @@ The ledger records folders and backup information. Save actual files and deploym
 
 ```text
 web/               Web interface, API, and tests
-desktop/           Windows start and stop scripts
+DEVELOPMENT.en.md  Web development guide
 deploy/mongodb/    Optional MongoDB replica-set configuration
 Dockerfile         Image build
 compose.yaml       Docker deployment
