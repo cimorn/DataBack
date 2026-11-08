@@ -65,6 +65,8 @@ python app.py
 
 Open <http://127.0.0.1:8767>. For frontend development, run `pnpm dev` from `web/` in another terminal. Keep the Python server running for API requests.
 
+Set the `DATABACK_PRIVACY_PASSWORD` environment variable before using private folders locally.
+
 ```sh
 pnpm test
 pnpm build
@@ -76,12 +78,6 @@ MongoDB integration tests require a separate replica set. Set `DATABACK_TEST_MON
 Edit `web/src/` for the interface and `web/backend/` for the API. Push to `main` to run tests and publish `ghcr.io/cimorn/databack:latest` through GitHub Actions. Each build also publishes a `sha-<full-commit-hash>` tag for pinning or rolling back an image.
 
 To build locally, run `docker build -t databack .` from the repository root.
-
-## Desktop launcher
-
-On Windows, build `web/`, then double-click `desktop/启动.cmd` to start and `desktop/关闭.cmd` to stop. The launcher opens the local web app in your browser. Data is stored in `data/` at the repository root.
-
-Set the `DATABACK_PRIVACY_PASSWORD` environment variable before using private folders locally.
 
 ## Back up and restore data
 
@@ -95,7 +91,6 @@ The ledger records folders and backup information. Save actual files and deploym
 
 ```text
 web/               Web interface, API, and tests
-desktop/           Windows start and stop scripts
 deploy/mongodb/    Optional MongoDB replica-set configuration
 Dockerfile         Image build
 compose.yaml       Docker deployment

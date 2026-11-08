@@ -65,6 +65,8 @@ python app.py
 
 打开 <http://127.0.0.1:8767>。开发界面时另开终端，在 `web/` 运行 `pnpm dev`，API 由 Python 服务提供。
 
+使用本机隐私目录前，设置 `DATABACK_PRIVACY_PASSWORD` 环境变量。
+
 ```sh
 pnpm test
 pnpm build
@@ -76,12 +78,6 @@ MongoDB 集成测试使用独立副本集，通过 `DATABACK_TEST_MONGO_URI` 指
 修改 `web/src/` 更新界面，修改 `web/backend/` 更新接口。提交并推送到 `main` 后，GitHub Actions 自动测试并发布 `ghcr.io/cimorn/databack:latest`。也会发布 `sha-完整提交编号` 标签，可用于固定镜像或回退。
 
 本机构建镜像：`docker build -t databack .`（在项目根目录执行）。
-
-## 桌面启动
-
-Windows 构建 `web/` 后，双击 `desktop/启动.cmd`；关闭时双击 `desktop/关闭.cmd`。启动器使用浏览器打开本机网页，数据保存在项目根目录的 `data/`。
-
-使用本机隐私目录前，设置 `DATABACK_PRIVACY_PASSWORD` 环境变量。
 
 ## 数据备份与恢复
 
@@ -95,7 +91,6 @@ Windows 构建 `web/` 后，双击 `desktop/启动.cmd`；关闭时双击 `deskt
 
 ```text
 web/               网页界面、API、测试
-desktop/           Windows 启动与关闭脚本
 deploy/mongodb/    可选 MongoDB 副本集配置
 Dockerfile         镜像构建
 compose.yaml       Docker 部署
